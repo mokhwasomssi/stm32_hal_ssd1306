@@ -1,0 +1,8 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "ssd1306.h": "c",
+        "i2c.h": "c",
+        "main.h": "c"
+    }
+}
