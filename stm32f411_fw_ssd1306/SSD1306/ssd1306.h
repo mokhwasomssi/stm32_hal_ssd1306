@@ -3,13 +3,24 @@
  *
  *  Created on: 2021. 6. 30.
  *      Author: mokhwasomssi
+ * 
+ *       Table: SSD1306 Header
+ *              SSD1306 Interface
+ *              SSD1306 Constant
+ *              SSD1306 Interface
+ *              SSD1306 Enumeration
+ *              SSD1306 Struct
+ *              SSD1306 Definition
+ *              SSD1306 Function
+ * 
  */
 
 
 #ifndef __SSD1306_H__
 #define __SSD1306_H__
 
- 
+
+/* SSD1306 Header */ 
 #include "i2c.h" // header from stm32cubemx code generate
 
 
@@ -18,11 +29,11 @@
 // I2C bus data format
 // Start - Slave Address(R/W) - Control byte(D/C) - Data byte - Stop 
 
-#define SSD1306_I2C                (&hi2c1)
-#define SSD1306_I2C_SA             (0x3C)    // Slave address
+#define SSD1306_I2C                     (&hi2c1)
+#define SSD1306_I2C_SA                  0x3C    // Slave address
 
-#define SSD1306_I2C_SA_READ        (SSD1306_I2C_SA << 1 | 1)
-#define SSD1306_I2C_SA_WRITE       (SSD1306_I2C_SA << 1 | 0)
+#define SSD1306_I2C_SA_READ             (SSD1306_I2C_SA << 1 | 1)
+#define SSD1306_I2C_SA_WRITE            (SSD1306_I2C_SA << 1 | 0)
 
 #define SSD1306_CONTROL_BYTE_DATA        0x40
 #define SSD1306_CONTROL_BYTE_COMMAND     0x00
@@ -53,6 +64,7 @@ typedef enum
 } SSD1306_STATE;
 
 
+
 /* SSD1306 Struct */
 typedef struct
 {
@@ -73,14 +85,10 @@ typedef struct
 
 } SSD1306_VERTEX;
 
-/* SSD1306 global function */
 
-void ssd1306_init();
+/* SSD1306 Definition */
 
-
-/* SSD1306 Command */
-
-// 0. Command Table for Charge Bump Setting
+// Charge Bump Setting Command
 
 // Note. if enable charge pump
 // 8Dh : Charge Pump Setting
@@ -88,18 +96,18 @@ void ssd1306_init();
 // AFh : Display ON
 
 #define CHARGE_BUMP_SETTING         0x8D
-#ifdef CHARGE_BUMP_SETTING
+#ifdef  CHARGE_BUMP_SETTING
+
     // A[7:0]
     #define DISABLE_CHARGE_BUMP     0x10    // reset
     #define ENABLE_CHARGE_BUMP      0x14    
 #endif
 
 
-// 1. Fundamental Command Table
-
-
+// Fundamental Command
 #define SET_CONTRAST_CONTROL    0x81   
-#ifdef SET_CONTRAST_CONTROL
+#ifdef  SET_CONTRAST_CONTROL
+
     // A[7:0]
     #define CONTRAST_STEP       256     
     #define CONTRAST_RESET      0x7F    // reset
@@ -111,7 +119,7 @@ void ssd1306_init();
 #define ENTIRE_DISPLAY_ON       0xA5
 
 
-#define SET_NORMAL_DISPLAY      0xA6    // 0x00 : BLACK, 0x01 : WHITE
+#define SET_NORMAL_DISPLAY      0xA6    // 0x00 : BLACK, 0x01 : WHITE (reset)
 #define SET_INVERSE_DISPLAY     0xA7    // 0x00 : WHITE, 0x01 : BLACK
 
 
@@ -119,11 +127,10 @@ void ssd1306_init();
 #define SET_DISPLAY_ON          0xAF    // normal mode
 
 
-// 2. Scrolling Command Table
-
-
+// Scrolling Command
 #define CONTINUMOUS_HORIZONTAL_SCROLL_SETUP
-#ifdef CONTINUMOUS_HORIZONTAL_SCROLL_SETUP
+#ifdef  CONTINUMOUS_HORIZONTAL_SCROLL_SETUP
+
     #define RIGHT                       0x26
     #define LEFT                        0x27
 
@@ -142,7 +149,7 @@ void ssd1306_init();
 
 
 #define CONTINUOUS_VERTICAL_AND_HORIZONTAL_SCROLL_SETUP
-#ifdef CONTINUOUS_VERTICAL_AND_HORIZONTAL_SCROLL_SETUP
+#ifdef  CONTINUOUS_VERTICAL_AND_HORIZONTAL_SCROLL_SETUP
     // Horizontal scroll by 1 column
     #define VERTICAL_RIGHT_HORIZONTAL   0x29
     #define VERTICAL_LEFT_HORIZONTAL    0x2A
@@ -169,7 +176,7 @@ void ssd1306_init();
 
 
 #define SET_VERTICAL_SCROLL_AREA        0xA3
-#ifdef SET_VERTICAL_SCROLL_AREA
+#ifdef  SET_VERTICAL_SCROLL_AREA
     // A[5:0]
     #define TOP_FIXED_AREA
 
@@ -178,25 +185,52 @@ void ssd1306_init();
 #endif
 
 
-// 3. Addressing Setting Command Table
+// Addressing Setting Command
+
+// Note. This command is only for page addressing mode.
+#define SET_LOWER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE  // 0x00 ~ 0x0F
+#define SET_HIGHER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE // 0x10 ~ 0x1F
 
 
 #define SET_MEMORY_ADDRESSING_MODE  0x20
-#ifdef SET_MEMORY_ADDRESSING_MODE
+#ifdef  SET_MEMORY_ADDRESSING_MODE
+
     // A[1:0]
-    #define PAGE_ADDRESSING         0b10    // reset
     #define HORIZONTAL_ADDRESSING   0b00
     #define VERTICAL_ADDRESSING     0b01
+    #define PAGE_ADDRESSING         0b10    // reset
+    #define INVALID                 0b11
 #endif
 
 
-/* only for page addressing mode*/
-#define SET_LOWER_COLUMN_START_ADDRESS  // 0x00 ~ 0x0F
-#define SET_HIGHER_COLUMN_START_ADDRESS // 0x10 ~ 0x1F
+// Note. This command is only for horizontal or vertical addressing mode.
+#define SET_COLUMN_ADDRESS          0x21
+#ifdef  SET_COLUMN_ADDRESS
+
+    // A[6:0]
+    #define START                   // 0(reset) - 127
+
+    // B[6:0]
+    #define END                     // 0 - 127(reset)
+#endif
 
 
-#define SET_PAGE_START_ADDRESS
-#ifdef SET_PAGE_START_ADDRESS
+// Note. This command is only for horizontal or vertical addressing mode.
+#define SET_PAGE_ADDRESS            0x22
+#ifdef  SET_PAGE_ADDRESS
+
+    // A[2:0]
+    #define START                   // 0(reset) - 7
+    
+    // B[2:0]
+    #define END                     // 0 - 7(reset)
+#endif
+
+
+// Note. This command is only for page addressing mode.
+#define SET_PAGE_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE
+#ifdef  SET_PAGE_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE
+
     #define PAGE_0                   0xB0
     #define PAGE_1                   0xB1
     #define PAGE_2                   0xB2
@@ -208,91 +242,77 @@ void ssd1306_init();
 #endif
 
 
-/* only for Horizontal or vertical addressing mode */
-#define SET_COLUMN_ADDRESS          0x21
-#ifdef SET_COLUMN_ADDRESS
-    // A[6:0]
-    #define START                   // 0(reset) - 127
+// Hardware Configuration Command
+#define SET_DISPLAY_START_LINE              
+#ifdef  SET_DISPLAY_START_LINE
 
-    // B[6:0]
-    #define END                     // 0 - 127(reset)
+    #define DISPLAY_START_LINE              // 0x40(reset) - 0x7F
+    #define DISPLAY_START_LINE_RESET        0x40
 #endif
-
-
-#define SET_PAGE_ADDRESS            0x22
-#ifdef SET_PAGE_ADDRESS
-    // A[2:0]
-    #define START                   // 0(reset) - 7
-    
-    // B[2:0]
-    #define END                     // 0 - 7(reset)
-#endif
-
-
-// 4. Hardware Configuration (Panel resolution & layout related) Command Table
-
-#define SET_DISPLAY_START_LINE              // 0x40 - 0x7F
 
 
 #define SET_SEGMENT_REMAP
-#ifdef SET_SEGMENT_REMAP
+#ifdef  SET_SEGMENT_REMAP
     #define MAP                             0xA0    // reset
     #define REMAP                           0xA1
 #endif
 
 
 #define SET_MULTIPLEX_RATIO                 0xA8
-#ifdef SET_MULTIPLEX_RATIO   
+#ifdef  SET_MULTIPLEX_RATIO   
     // A[5:0]
-    #define MUX                             // 15 - 63 (reset)
-    #define MUX_RESET                       0x3F    // 63
+    #define MUX                             // 15 - 63(reset)
+    #define MUX_RESET                       63
 #endif
 
 
-#define SET_COM_OUTPUT_SCAN_DIRECTION
-#ifdef SET_COM_OUTPUT_SCAN_DIRECTION               
-    #define NORMAL_MODE                     0xC0    
-    #define REMAPPED_MODE                   0xC8    // Vertically flipped
+#define SET_COM_OUPUT_SCAN_DIRECTION
+#ifdef  SET_COM_OUPUT_SCAN_DIRECTION
+
+    #define NORMAL_MODE                     0xC0    // reset        
+    #define REMAPPED_MODE                   0xC8
 #endif
 
 
 #define SET_DISPLAY_OFFSET                  0xD3
-#ifdef SET_DISPLAY_OFFSET
+#ifdef  SET_DISPLAY_OFFSET
+
     // A[5:0]
-    #define VERTICAL_SHIFT                  // 0 (reset) - 63
-    #define VERTICAL_SHIFT_RESET            0x00
+    #define VERTICAL_SHIFT                  // 0(reset) - 63
+    #define VERTICAL_SHIFT_RESET            0
 #endif
 
 
 #define SET_COM_PINS_HARDWARE_CONFIG        0xDA
-#ifdef SET_COM_PINS_HARDWARE_CONFIG
+#ifdef  SET_COM_PINS_HARDWARE_CONFIG
+
     // A[4]
-    #define ALTERNATIVE_COM_PIN_CONFIG      0x12    // reset
-    #define SEQUENTIAL_COM_PIN_CONFIG       0x02
+    #define SEQUENTIAL_COM_PIN_CONFIG       0 << 4
+    #define ALTERNATIVE_COM_PIN_CONFIG      1 << 4    // reset
 
     // A[5]
-    #define DISABLE_COM_LEFT_RIGHT_REMAP    0x02    // reset
-    #define ENABLE_COM_LEFT_RIGHT_REMAP     0x22
+    #define DISABLE_COM_LEFT_RIGHT_REMAP    0 << 5    // reset
+    #define ENABLE_COM_LEFT_RIGHT_REMAP     1 << 5
 #endif
 
 
-// 5. Timing & Driving Scheme Setting Command Table
-
-
+// Timing & Driving Scheme Setting Command
 #define SET_DISPLAY_CLOCK_DIVIDE_RATIO_AND_OSC_FREQ     0xD5
-#ifdef SET_DISPLAY_CLOCK_DIVIDE_RATIO_AND_OSC_FREQ
+#ifdef  SET_DISPLAY_CLOCK_DIVIDE_RATIO_AND_OSC_FREQ
+
     // A[3:0]
-    #define DIVIDE_RATIO            // 0 (reset) - 15
-    #define DIVIDE_RATIO_RESET      0x00
+    #define DIVIDE_RATIO            // 0(reset) - 15
+    #define DIVIDE_RATIO_RESET      0
 
     // A[7:4]
-    #define OSC_FREQ                // 0b1000 (reset), 0b0000 - 0b1111, 
-    #define OSC_FREQ_RESET          0x08
+    #define OSC_FREQ                // 0b1000(reset), 0b0000 - 0b1111, 
+    #define OSC_FREQ_RESET          0b1000
 #endif
 
 
 #define SET_PRE_CHARGE_PERIOD       0xD9
-#ifdef SET_PRE_CHARGE_PERIOD
+#ifdef  SET_PRE_CHARGE_PERIOD
+
     // A[3:0]
     #define PHASE_1                 // 0x02 (reset), 0x01 - 0x15
     #define PHASE_1_RESET           0x02
@@ -304,7 +324,8 @@ void ssd1306_init();
 
 
 #define SET_V_COMH_DESELECT_LEVEL   0xDB
-#ifdef SET_V_COMH_DESELECT_LEVEL
+#ifdef  SET_V_COMH_DESELECT_LEVEL
+
     // A[6:4]
     #define DESELECT_LEVEL_1        0x00    // 0.65 * Vcc
     #define DESELECT_LEVEL_2        0x20    // 0.77 * Vcc (reset)
@@ -312,7 +333,50 @@ void ssd1306_init();
 #endif
 
 
-#define NOP                         0xE3    // No operation
+/* SSD1306 Function */
+
+// I2C Write
+void ssd1306_write_command(uint8_t command);
+void ssd1306_write_data(uint8_t* buffer, uint16_t size);
+
+// Charge Bump Setting Command
+void charge_bump_setting(uint8_t charge_bump);
+
+// Fundamental Command
+void set_contrast_control(uint8_t value);    // 256 constrast steps
+void set_entire_display_off();   // Resume to RAM content display (reset)
+void set_entire_display_on();
+void set_normal_display();       // 0x00 : BLACK, 0x01 : WHITE
+void set_inverse_display();      // 0x00 : WHITE, 0x01 : BLACK
+void set_display_off();          // sleep mode (reset)
+void set_display_on();           // normal mode
+
+// Scrolling Command
+// 안써용~
+
+// Addressing Setting Command
+void set_lower_column_start_address_for_page_addressing_mode(uint8_t addr);
+void set_higher_column_start_address_for_page_addressing_mode(uint8_t addr);
+void set_memory_addressing_mode(uint8_t mode);
+void set_column_address(uint8_t start, uint8_t end); // 0(reset) - 127 , 0 - 127(reset)
+void set_page_address(uint8_t start, uint8_t end);   // 0(reset) - 7   , 0 - 7(reset)
+void set_page_start_address_for_page_addressing_mode(uint8_t page);  // PAGE_0 - PAGE_7
+
+// Hardware Configuration Command
+void set_display_start_line(uint8_t start_line);     // 0x40(reset) - 0x7F
+void set_segment_remap(uint8_t mapping);             // MAP(reset), REMAP
+void set_multiplex_ratio(uint8_t mux);               // 15 - 63 (reset)
+void set_com_output_scan_direction(uint8_t mode); 
+void set_display_offset(uint8_t vertical_shift);     // 0 (reset) - 63
+void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap);
+
+// Timing & Driving Scheme Setting Command
+void set_display_clock_divide_ratio_and_osc_freq(uint8_t divide_ratio, uint8_t osc_freq);
+void set_pre_charge_period(uint8_t phase_1, uint8_t phase_2);
+void set_v_comh_deselect_level(uint8_t deselect_level);
+
+// Initialize
+void ssd1306_init();
 
 
 #endif /* __SSD1306_H__ */

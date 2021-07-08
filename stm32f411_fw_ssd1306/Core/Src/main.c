@@ -91,7 +91,10 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_Delay(100);
+
   ssd1306_init();
+
 
   /* USER CODE END 2 */
 
@@ -102,6 +105,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  set_normal_display();
+	  HAL_Delay(1000);
+
+	  set_inverse_display();
+	  HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 }

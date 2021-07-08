@@ -3,81 +3,207 @@
  *
  *  Created on: 2021. 6. 30.
  *      Author: mokhwasomssi
+ * 
+ *       Table: SSD1306 Header
+ *              SSD1306 Variable
+ *              SSD1306 Write Function
+ *              SSD1306 Command Function
+ *  
+ *                  0. Charge Bump Setting
+ *                  1. Fundamental
+ *                  2. Scrolling
+ *                  3. Addressing Setting
+ *                  4. Hardware Configuration
+ *                  5. Timing & Driving Scheme
+ * 
+ *              SSD1306 Function
+ * 
+ *                  ssd1306_write_command
+ *                  ssd1306_write_data
+*                   ssd1306_init
+ * 
  */
 
 
+
+/* SSD1306 Header */ 
 #include "ssd1306.h"
 #include <string.h> // memcpy
 
 
-/* SSD1306 variable */
 
-static uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
-static SSD1306 ssd1306;
+/* SSD1306 Variable */
 
-
-/* SSD1306 static function prototype */
-
-static void reset();
-static void ssd1306_write_command(uint8_t command);
-static void ssd1306_write_data(uint8_t* buffer, uint16_t size);
-static SSD1306_STATE ssd1306_fill_buffer(uint8_t* buf, uint32_t len);
+uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
+SSD1306 ssd1306;
 
 
-// 0. Command Table for Charge Bump Setting
 
-static void charge_bump_setting(uint8_t charge_bump);
+/* SSD1306 function */
 
+// I2C Write
+void ssd1306_write_command(uint8_t command)
+{
+    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_COMMAND, 1, &command, 1, 10);
+}
 
-// 1. Fundamental Command Table
-
-static void set_contrast_control(uint8_t value);    // 256 constrast steps
-
-static void set_entire_display_off();   // Resume to RAM content display (reset)
-static void set_entire_display_on();
-
-static void set_normal_display();       // 0x00 : BLACK, 0x01 : WHITE
-static void set_inverse_display();      // 0x00 : WHITE, 0x01 : BLACK
-
-static void set_display_off();          // sleep mode
-static void set_display_on();           // normal mode
+void ssd1306_write_data(uint8_t* buffer, uint16_t size)
+{
+    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_DATA, 1, buffer, size, 10);
+}
 
 
-// 2. Scrolling Command Table
+// Charge Bump Setting Command
+void charge_bump_setting(uint8_t charge_bump)
+{
+    ssd1306_write_command(CHARGE_BUMP_SETTING);
+    ssd1306_write_command(charge_bump);
+}
 
 
-// 3. Addressing Setting Command Table
+// Fundamental Command
+void set_contrast_control(uint8_t value)
+{
+    ssd1306_write_command(SET_CONTRAST_CONTROL);
+    ssd1306_write_command(value);
+}
 
-static void set_memory_addressing_mode(uint8_t mode);
-static void set_lower_column_start_address(uint8_t addr);
-static void set_higher_column_start_address(uint8_t addr);
-static void set_page_start_address(uint8_t page);
+void set_entire_display_off()
+{
+    ssd1306_write_command(ENTIRE_DISPLAY_OFF);
+}
+
+void set_entire_display_on()
+{
+    ssd1306_write_command(ENTIRE_DISPLAY_ON);
+}
+
+void set_normal_display()
+{
+    ssd1306_write_command(SET_NORMAL_DISPLAY);
+}
+
+void set_inverse_display()
+{
+    ssd1306_write_command(SET_INVERSE_DISPLAY);
+}
+
+void set_display_on()
+{
+    ssd1306_write_command(SET_DISPLAY_ON);
+}
+
+void set_display_off()
+{
+    ssd1306_write_command(SET_DISPLAY_OFF);
+}
 
 
-// 4. Hardware Configuration (Panel resolution & layout related) Command Table
-
-static void set_display_start_line(uint8_t start_line);     // 0x40 - 0x7F
-static void set_segment_remap(uint8_t mapping);
-static void set_multiplex_ratio(uint8_t mux);               // 15 - 63 (reset)
-static void set_com_output_scan_direction(uint8_t mode); 
-static void set_display_offset(uint8_t vertical_shift);     // 0 (reset) - 63
-static void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap);
+// Scrolling Command
+// 안써용~
 
 
-// 5. Timing & Driving Scheme Setting Command Table
+// Addressing Setting Command
+void set_lower_column_start_address_for_page_addressing_mode(uint8_t addr)
+{
+    ssd1306_write_command(addr);
+}
 
-static void set_display_clock_divide_ratio_and_osc_freq(uint8_t divide_ratio, uint8_t osc_freq);
-static void set_pre_charge_period(uint8_t phase_1, uint8_t phase_2);
-static void set_v_comh_deselect_level(uint8_t deselect_level);
+void set_higher_column_start_address_for_page_addressing_mode(uint8_t addr)
+{
+    ssd1306_write_command(addr);
+}
+
+void set_memory_addressing_mode(uint8_t mode)
+{
+    ssd1306_write_command(SET_MEMORY_ADDRESSING_MODE);
+    ssd1306_write_command(mode);
+}
+
+void set_column_address(uint8_t start, uint8_t end)
+{
+    ssd1306_write_command(SET_COLUMN_ADDRESS);
+    ssd1306_write_command(start);
+    ssd1306_write_command(end);
+}
+
+void set_page_address(uint8_t start, uint8_t end)
+{
+    ssd1306_write_command(SET_PAGE_ADDRESS);
+    ssd1306_write_command(start);
+    ssd1306_write_command(end);
+}
+
+void set_page_start_address_for_page_addressing_mode(uint8_t page)  // 0xB0(page0) ~ 0xB7(page7)
+{
+    ssd1306_write_command(page);
+}
 
 
-/* SSD1306 global function */
+// Hardware Configuration Command
+void set_display_start_line(uint8_t start_line)
+{
+    ssd1306_write_command(start_line);
+}
 
+void set_segment_remap(uint8_t mapping)
+{
+    ssd1306_write_command(mapping);
+}
+
+void set_multiplex_ratio(uint8_t mux)
+{
+    ssd1306_write_command(SET_MULTIPLEX_RATIO);
+    ssd1306_write_command(mux);
+}
+
+void set_com_output_scan_direction(uint8_t mode)
+{
+    ssd1306_write_command(mode);
+}
+
+void set_display_offset(uint8_t vertical_shift)
+{
+    ssd1306_write_command(SET_DISPLAY_OFFSET);
+    ssd1306_write_command(vertical_shift);
+}
+
+void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap)
+{
+    uint8_t buffer = 0x02 | com_pin_config | com_left_right_remap;
+
+    ssd1306_write_command(SET_COM_PINS_HARDWARE_CONFIG);
+    ssd1306_write_command(buffer);
+}
+
+
+// Timing & Driving Scheme Setting Command
+void set_display_clock_divide_ratio_and_osc_freq(uint8_t divide_ratio, uint8_t osc_freq)
+{
+    uint8_t buffer = (osc_freq << 4) | divide_ratio;
+
+    ssd1306_write_command(SET_DISPLAY_CLOCK_DIVIDE_RATIO_AND_OSC_FREQ);
+    ssd1306_write_command(buffer);
+}
+
+void set_pre_charge_period(uint8_t phase_1, uint8_t phase_2)
+{
+    uint8_t buffer = (phase_2 << 4) | phase_1;
+
+    ssd1306_write_command(SET_PRE_CHARGE_PERIOD);
+    ssd1306_write_command(buffer);
+}
+
+void set_v_comh_deselect_level(uint8_t deselect_level)
+{
+    ssd1306_write_command(SET_V_COMH_DESELECT_LEVEL);
+    ssd1306_write_command(deselect_level);
+}
+
+
+// Initialize
 void ssd1306_init()
 {
-    // Reset OLED
-    reset();
-    
     // Wait for the screen to boot
     HAL_Delay(100);
 
@@ -86,16 +212,16 @@ void ssd1306_init()
 
     set_memory_addressing_mode(PAGE_ADDRESSING);
 
-    set_page_start_address(PAGE_0);
+    set_page_start_address_for_page_addressing_mode(PAGE_0);
 
     set_com_output_scan_direction(NORMAL_MODE);
 
-    set_lower_column_start_address(0x00);   // stating column is SEG0
-    set_higher_column_start_address(0x10);
+    set_lower_column_start_address_for_page_addressing_mode(0x00);   // stating column is SEG0
+    set_higher_column_start_address_for_page_addressing_mode(0x10);
 
     set_display_start_line(0x40);
 
-    set_contrast_control(CONTRAST_MAX); 
+    set_contrast_control(CONTRAST_RESET);
 
     set_segment_remap(MAP);
 
@@ -115,186 +241,8 @@ void ssd1306_init()
 
     set_v_comh_deselect_level(DESELECT_LEVEL_2);
     
+
     charge_bump_setting(ENABLE_CHARGE_BUMP);
 
     set_display_on();
-}
-
-
-
-
-
-
-
-
-
-
-/* SSD1306 static function definition */
-
-
-/* SSD1306 Interface */
-
-static void ssd1306_write_command(uint8_t command)
-{
-    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_COMMAND, 1, &command, 1, 10);
-}
-
-static void ssd1306_write_data(uint8_t* buffer, uint16_t size)
-{
-    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_DATA, 1, buffer, size, 10);
-}
-
-static void reset()
-{
-    /* Nothing to do */
-}
-
-static SSD1306_STATE ssd1306_fill_buffer(uint8_t* buf, uint32_t len)
-{
-    SSD1306_STATE ret = SSD1306_ERR;
-
-    if(len <= SSD1306_BUFFER_SIZE)
-    {
-        memcpy(ssd1306_buffer, buf, len);
-        ret = SSD1306_OK;
-    }
-
-    return ret;
-}
-
-
-/* SSD1306 Command */
-
-// 0. Command Table for Charge Bump Setting
-
-static void charge_bump_setting(uint8_t charge_bump)
-{
-    ssd1306_write_command(CHARGE_BUMP_SETTING);
-    ssd1306_write_command(charge_bump);
-}
-
-
-// 1. Fundamental Command Table
-
-static void set_contrast_control(uint8_t value)
-{
-    ssd1306_write_command(SET_CONTRAST_CONTROL);
-    ssd1306_write_command(value);
-}
-
-static void set_entire_display_off()
-{
-    ssd1306_write_command(ENTIRE_DISPLAY_OFF);
-}
-
-static void set_entire_display_on()
-{
-    ssd1306_write_command(ENTIRE_DISPLAY_ON);
-}
-
-static void set_normal_display()
-{
-    ssd1306_write_command(SET_NORMAL_DISPLAY);
-}
-
-static void set_inverse_display()
-{
-    ssd1306_write_command(SET_INVERSE_DISPLAY);
-}
-
-static void set_display_on()
-{
-    ssd1306_write_command(SET_DISPLAY_ON);
-}
-
-static void set_display_off()
-{
-    ssd1306_write_command(SET_DISPLAY_OFF);
-}
-
-
-// 3. Addressing Setting Command Table
-
-static void set_memory_addressing_mode(uint8_t mode)
-{
-    ssd1306_write_command(SET_MEMORY_ADDRESSING_MODE);
-    ssd1306_write_command(mode);
-}
-
-static void set_lower_column_start_address(uint8_t addr)
-{
-    ssd1306_write_command(addr);
-}
-
-static void set_higher_column_start_address(uint8_t addr)
-{
-    ssd1306_write_command(addr);
-}
-
-static void set_page_start_address(uint8_t page)  // 0xB0(page0) ~ 0xB7(page7)
-{
-    ssd1306_write_command(page);
-}
-
-
-// 4. Hardware Configuration (Panel resolution & layout related) Command Table
-
-static void set_display_start_line(uint8_t start_line)
-{
-    ssd1306_write_command(start_line);
-}
-
-static void set_segment_remap(uint8_t mapping)
-{
-    ssd1306_write_command(mapping);
-}
-
-static void set_multiplex_ratio(uint8_t mux)
-{
-    ssd1306_write_command(SET_MULTIPLEX_RATIO);
-    ssd1306_write_command(mux);
-}
-
-static void set_com_output_scan_direction(uint8_t mode)
-{
-    ssd1306_write_command(mode);
-}
-
-static void set_display_offset(uint8_t vertical_shift)
-{
-    ssd1306_write_command(SET_DISPLAY_OFFSET);
-    ssd1306_write_command(vertical_shift);
-}
-
-static void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap)
-{
-    uint8_t buffer = com_pin_config | com_left_right_remap;
-
-    ssd1306_write_command(SET_COM_PINS_HARDWARE_CONFIG);
-    ssd1306_write_command(buffer);
-}
-
-
-// 5. Timing & Driving Scheme Setting Command Table
-
-static void set_display_clock_divide_ratio_and_osc_freq(uint8_t divide_ratio, uint8_t osc_freq)
-{
-    uint8_t buffer = (osc_freq << 4) | divide_ratio;
-
-    ssd1306_write_command(SET_DISPLAY_CLOCK_DIVIDE_RATIO_AND_OSC_FREQ);
-    ssd1306_write_command(buffer);
-}
-
-static void set_pre_charge_period(uint8_t phase_1, uint8_t phase_2)
-{
-    uint8_t buffer = (phase_2 << 4) | phase_1;
-
-    ssd1306_write_command(SET_PRE_CHARGE_PERIOD);
-    ssd1306_write_command(buffer);
-}
-
-static void set_v_comh_deselect_level(uint8_t deselect_level)
-{
-    ssd1306_write_command(SET_V_COMH_DESELECT_LEVEL);
-    ssd1306_write_command(deselect_level);
 }
