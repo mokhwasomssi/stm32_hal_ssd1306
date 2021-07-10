@@ -92,10 +92,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_Delay(500);
-
-  //ssd1306_software_reset();
   ssd1306_init();
+  ssd1306_white_screen();
 
+  ssd1306_set_cursor(0, 0);
+  ssd1306_write_char(font6x8, 'A');
+  ssd1306_write_char(font6x8, 'B');
+  ssd1306_write_char(font6x8, 'C');
+
+  ssd1306_update_screen();
 
   /* USER CODE END 2 */
 
@@ -107,11 +112,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  ssd1306_black_screen();
-	  HAL_Delay(500);
 
-	  ssd1306_white_screen();
-	  HAL_Delay(500);
 
   }
   /* USER CODE END 3 */
