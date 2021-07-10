@@ -33,6 +33,7 @@
 
 #define SSD1306_WIDTH           128
 #define SSD1306_HEIGHT          64
+#define SSD1306_PAGE            8
 
 #define SSD1306_BUFFER_SIZE     SSD1306_WIDTH * SSD1306_HEIGHT / 8
 
@@ -96,12 +97,12 @@ typedef struct
 #define SET_VERTICAL_SCROLL_AREA                                    0xA3
 
 /* Addrssing Setting Command */
-#define SET_LOWER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE  
-#define SET_HIGHER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE 
+#define SET_LOWER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE     // 0x00 - 0x0F
+#define SET_HIGHER_COLUMN_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE    // 0x10 - 0x1F
 #define SET_MEMORY_ADDRESSING_MODE                                  0x20
 #define SET_COLUMN_ADDRESS                                          0x21
 #define SET_PAGE_ADDRESS                                            0x22
-#define SET_PAGE_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE        
+#define SET_PAGE_START_ADDRESS_FOR_PAGE_ADDRESSING_MODE             // 0xB0 - 0xB7
 
 /* Hardware Configuration Command */
 #define SET_DISPLAY_START_LINE        
@@ -117,12 +118,17 @@ typedef struct
 #define SET_V_COMH_DESELECT_LEVEL                                   0xDB
 
 
-/* I2C write */
+/* I2C Write Function */
+
+// @param : Select Command
 void ssd1306_write_command(uint8_t command);
+
+// @param : Buffer Pointer
+// @param : Buffer Size
 void ssd1306_write_data(uint8_t* buffer, uint16_t size);
 
 
-/* Charge Bump Setting */
+/* Charge Bump Setting Function */
 
 // @param : 0x10(disable, reset), 0x14(enable)
 // Note. if enable charge pump
@@ -132,29 +138,38 @@ void ssd1306_write_data(uint8_t* buffer, uint16_t size);
 void charge_bump_setting(uint8_t charge_bump); 
 
 
-/* Fundamental */
+/* Fundamental Function */
 
 // @param : 0 - 255, 127(reset)
 void set_contrast_control(uint8_t value);
 
-void set_entire_display_off();              // Resume to RAM content display(reset)
-void set_entire_display_on();    
-void set_normal_display();                  // 0x00 : BLACK, 0x01 : WHITE
-void set_inverse_display();                 // 0x00 : WHITE, 0x01 : BLACK
-void set_display_off();                     // sleep mode (reset)
-void set_display_on();                      // normal mode
+// Resume to RAM content display(reset)
+void entire_display_off();
+void entire_display_on();    
+
+// 0x00 : BLACK, 0x01 : WHITE
+void set_normal_display();                
+
+// 0x00 : WHITE, 0x01 : BLACK
+void set_inverse_display();        
+
+// sleep mode (reset)
+void set_display_off();   
+
+// normal mode
+void set_display_on();                      
 
 
-/* Scrolling Command */
+/* Scrolling Function */
 // 안써용~
 
 
-/* Addressing Setting */
+/* Addressing Setting Function */
 
-// @param : 0x00 - 0x0F
+// @param : 0x00(reset) - 0x0F
 void set_lower_column_start_address_for_page_addressing_mode(uint8_t addr);
 
-// @param : 0x10 - 0x1F
+// @param : 0x10(reset) - 0x1F
 void set_higher_column_start_address_for_page_addressing_mode(uint8_t addr);
 
 // @param : 0(horizontal). 1(vertical), 2(page, reset)
@@ -172,7 +187,7 @@ void set_page_address(uint8_t start, uint8_t end);
 void set_page_start_address_for_page_addressing_mode(uint8_t page);
 
 
-/* Hardware Configuration */
+/* Hardware Configuration Function */
 
 // @param : 0x40(reset) - 0x7F
 void set_display_start_line(uint8_t start_line);
@@ -190,11 +205,11 @@ void set_com_output_scan_direction(uint8_t mode);
 void set_display_offset(uint8_t vertical_shift);     
 
 // @param : 0x00(sequential), 0x10(alternative, reset)
-// @param : 0x00(disable), 0x20(enable)
+// @param : 0x00(disable, reset), 0x20(enable)
 void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap);
 
 
-/* Timing & Driving Scheme Setting */
+/* Timing & Driving Scheme Setting Function */
 
 // @param : 0(reset) - 15
 // @param : 0b0000 - 0b1111, 0b1000(reset)
@@ -208,8 +223,14 @@ void set_pre_charge_period(uint8_t phase_1, uint8_t phase_2);
 void set_v_comh_deselect_level(uint8_t deselect_level);
 
 
-/* Initialize */
+/* SSD1306 Function */
 void ssd1306_init();
+
+void ssd1306_update_screen();
+ 
+void ssd1306_black_screen();
+void ssd1306_white_screen();
+
 
 
 #endif /* __SSD1306_H__ */

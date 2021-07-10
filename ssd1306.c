@@ -11,20 +11,15 @@
 #include <string.h> // memcpy
 
 
-/* SSD1306 Variable */
-uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
-SSD1306 ssd1306;
-
-
-/* I2C write */
+/* I2C Write Function */
 void ssd1306_write_command(uint8_t command)
 {
-    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_COMMAND, 1, &command, 1, 10);
+    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_COMMAND, 1, &command, 1, 1000);
 }
 
 void ssd1306_write_data(uint8_t* buffer, uint16_t size)
 {
-    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_DATA, 1, buffer, size, 10);
+    HAL_I2C_Mem_Write(SSD1306_I2C, SSD1306_I2C_SA_WRITE, SSD1306_CONTROL_BYTE_DATA, 1, buffer, size, 1000);
 }
 
 
@@ -42,12 +37,12 @@ void set_contrast_control(uint8_t value)
     ssd1306_write_command(value);
 }
 
-void set_entire_display_off()
+void entire_display_off()
 {
     ssd1306_write_command(ENTIRE_DISPLAY_OFF);
 }
 
-void set_entire_display_on()
+void entire_display_on()
 {
     ssd1306_write_command(ENTIRE_DISPLAY_ON);
 }
@@ -175,9 +170,69 @@ void set_v_comh_deselect_level(uint8_t deselect_level)
 }
 
 
-/* Initialize */
+
+/* SSD1306 Variable */
+uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
+SSD1306 ssd1306;
+
+
+/* SSD1306 Function */
 void ssd1306_init()
 {
-    
+    // SSD1306 App Note 5p
+    set_multiplex_ratio(63);
 
+    set_display_offset(0);
+
+    set_display_start_line(0x40);
+
+    set_segment_remap(0xA0);
+
+    set_com_output_scan_direction(0xC0);
+
+    set_com_pins_hardware_config(0x00, 0x00);
+
+    set_contrast_control(0x7F);
+
+    entire_display_off();
+
+    set_normal_display();
+
+    set_display_clock_divide_ratio_and_osc_freq(0, 8);
+
+    charge_bump_setting(0x14);
+
+    set_display_on();
+}
+
+void ssd1306_update_screen()
+{
+    for(int i = 0; i < SSD1306_PAGE; i ++)
+    {
+        set_page_start_address_for_page_addressing_mode(0xB0 + i);
+        set_lower_column_start_address_for_page_addressing_mode(0x00);
+        set_higher_column_start_address_for_page_addressing_mode(0x10);
+
+        ssd1306_write_data(&ssd1306_buffer[SSD1306_WIDTH * i], SSD1306_WIDTH);
+    }
+}
+
+void ssd1306_black_screen()
+{
+    for(int i = 0; i < SSD1306_BUFFER_SIZE; i++)
+    {
+        ssd1306_buffer[i] = 0x00;
+    }
+
+    ssd1306_update_screen();
+}
+
+void ssd1306_white_screen()
+{
+    for(int i = 0; i < SSD1306_BUFFER_SIZE; i++)
+    {
+        ssd1306_buffer[i] = 0xFF;
+    }
+
+    ssd1306_update_screen();
 }
