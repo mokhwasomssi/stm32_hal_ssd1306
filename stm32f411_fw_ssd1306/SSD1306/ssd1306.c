@@ -202,7 +202,7 @@ void ssd1306_init()
 
     set_display_on();
 
-    // Delete Ram Data
+    // Clear Ram Data
     ssd1306_black_screen();
 }
 
