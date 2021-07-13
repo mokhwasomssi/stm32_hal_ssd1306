@@ -201,6 +201,9 @@ void ssd1306_init()
     charge_bump_setting(0x14);
 
     set_display_on();
+
+    // Delete Ram Data
+    ssd1306_black_screen();
 }
 
 void ssd1306_update_screen()
@@ -267,7 +270,7 @@ char ssd1306_write_char(SSD1306_FONT font, char ch)
     // Use the font to write
     for(int i = 0; i < font.height; i++)
     {
-        b = font6x8.data[(ch - 32) * font.height + i];
+        b = font.data[(ch - 32) * font.height + i];
         
         for(int j = 0; j < font.width; j++)
         {
@@ -289,14 +292,14 @@ char ssd1306_write_char(SSD1306_FONT font, char ch)
     return ch;
 }
 
-/*
+
 // Write full string to screen buffer
-char ssd1306_WriteString(char* str, FontDef Font, SSD1306_COLOR color)
+char ssd1306_write_string(SSD1306_FONT font, char *str)
 {
     // Write until null-byte
     while(*str)
     {
-        if(ssd1306_WriteChar(*str, Font, color) != *str)
+        if(ssd1306_write_char(font, *str) != *str)
         {
             // Char could not be written
             return *str;
@@ -309,8 +312,6 @@ char ssd1306_WriteString(char* str, FontDef Font, SSD1306_COLOR color)
     // Everything ok
     return *str;
 }
-
-*/
 
 void ssd1306_set_cursor(uint8_t x, uint8_t y)
 {

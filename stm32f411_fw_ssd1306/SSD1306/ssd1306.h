@@ -14,6 +14,7 @@
 #include "i2c.h" // header from stm32cubemx code generate
 #include "ssd1306_font.h"
 
+
 /* SSD1306 Interface */ 
 
 // I2C bus data format
@@ -216,7 +217,7 @@ void ssd1306_black_pixel(uint8_t x, uint8_t y);
 void ssd1306_white_pixel(uint8_t x, uint8_t y);
 
 char ssd1306_write_char(SSD1306_FONT font, char ch);
-void ssd1306_write_string();
+char ssd1306_write_string(SSD1306_FONT font, char *str);
 
 // Set current cursor
 // @param : 0 - 128
