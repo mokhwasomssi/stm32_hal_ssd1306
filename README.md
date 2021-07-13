@@ -22,11 +22,19 @@ __SSD1306, I2C, STM32 HAL__
 - SSD1306 commands are defined as functions
 
 
-## 2. STM32CubeMx Configuration
+## 2. User Configuration
 
-- I2C
+- I2C1
+
+### STM32CubeMx Configuration
 ![image](https://user-images.githubusercontent.com/48342925/125417497-32ca3cef-f010-490c-8961-9f549cfa895d.png)
 
+
+### ssd1306.h
+```c
+/* SSD1306 Interface */ 
+#define SSD1306_I2C                     (&hi2c1)
+```
 
 ## 3. main.c 
 
@@ -57,3 +65,7 @@ int main(void)
 ```
 
 <img src = "https://user-images.githubusercontent.com/48342925/125418758-c149c2b7-1df2-4a42-a911-758acb94bcdf.jpg" width = "50%">
+
+
+## Reference
+https://github.com/afiskon/stm32-ssd1306
