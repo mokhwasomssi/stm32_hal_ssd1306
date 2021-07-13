@@ -10,6 +10,10 @@
 #include "ssd1306.h"
 #include <string.h> // memcpy
 
+/* SSD1306 Variable */
+uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
+SSD1306_CURSOR cursor;
+
 
 /* I2C Write Function */
 void ssd1306_write_command(uint8_t command)
@@ -139,7 +143,7 @@ void set_display_offset(uint8_t vertical_shift)
 
 void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap)
 {
-    uint8_t buffer = 0x02 | com_pin_config | com_left_right_remap;
+    uint8_t buffer = 0x02 | (com_pin_config << 4) | (com_left_right_remap << 5);
 
     ssd1306_write_command(SET_COM_PINS_HARDWARE_CONFIG);
     ssd1306_write_command(buffer);
@@ -170,12 +174,6 @@ void set_v_comh_deselect_level(uint8_t deselect_level)
 }
 
 
-
-/* SSD1306 Variable */
-uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
-SSD1306 ssd1306;
-
-
 /* SSD1306 Function */
 void ssd1306_init()
 {
@@ -186,11 +184,11 @@ void ssd1306_init()
 
     set_display_start_line(0x40);
 
-    set_segment_remap(0xA0);
+    set_segment_remap(0xA1);
 
-    set_com_output_scan_direction(0xC0);
+    set_com_output_scan_direction(0xC8);
 
-    set_com_pins_hardware_config(0x00, 0x00);
+    set_com_pins_hardware_config(1, 0);
 
     set_contrast_control(0x7F);
 
@@ -203,6 +201,9 @@ void ssd1306_init()
     charge_bump_setting(0x14);
 
     set_display_on();
+
+    // Delete Ram Data
+    ssd1306_black_screen();
 }
 
 void ssd1306_update_screen()
@@ -235,4 +236,85 @@ void ssd1306_white_screen()
     }
 
     ssd1306_update_screen();
+}
+
+void ssd1306_black_pixel(uint8_t x, uint8_t y)
+{
+    // (y / 8) * SSD1306_WIDTH : page
+    // y % 8 : data bit D0 - D7
+    ssd1306_buffer[x + (y / 8) * SSD1306_WIDTH] &= ~(1 << (y % 8));
+}
+
+void ssd1306_white_pixel(uint8_t x, uint8_t y)
+{
+    // (y / 8) * SSD1306_WIDTH : page
+    // y % 8 : data bit D0 - D7
+    ssd1306_buffer[x + (y / 8) * SSD1306_WIDTH] |= 1 << (y % 8);
+}
+
+char ssd1306_write_char(SSD1306_FONT font, char ch)
+{
+    uint32_t b;
+
+    // Printable Characters : 32 - 126
+    if(ch < 32 || ch > 126)
+        return 0;
+
+    // Check remaining space on current line
+    if (SSD1306_WIDTH < (cursor.x + font.width) ||  SSD1306_HEIGHT < (cursor.y + font.height))
+    {
+        // Not enough space on current line
+        return 0;
+    }
+
+    // Use the font to write
+    for(int i = 0; i < font.height; i++)
+    {
+        b = font.data[(ch - 32) * font.height + i];
+        
+        for(int j = 0; j < font.width; j++)
+        {
+            if((b << j) & 0x8000)
+            {
+                ssd1306_white_pixel(cursor.x + j, cursor.y + i);
+            }
+            else
+            {
+                ssd1306_black_pixel(cursor.x + j, cursor.y + i);
+            }
+        }
+    }
+
+    // The current space is now taken
+    cursor.x += font.width;
+
+    // Return written char for validation
+    return ch;
+}
+
+
+// Write full string to screen buffer
+char ssd1306_write_string(SSD1306_FONT font, char *str)
+{
+    // Write until null-byte
+    while(*str)
+    {
+        if(ssd1306_write_char(font, *str) != *str)
+        {
+            // Char could not be written
+            return *str;
+        }
+
+        // Next char
+        str++;
+    }
+
+    // Everything ok
+    return *str;
+}
+
+void ssd1306_set_cursor(uint8_t x, uint8_t y)
+{
+    cursor.x = x;
+    cursor.y = y;
 }

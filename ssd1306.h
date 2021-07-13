@@ -12,6 +12,7 @@
 
 
 #include "i2c.h" // header from stm32cubemx code generate
+#include "ssd1306_font.h"
 
 
 /* SSD1306 Interface */ 
@@ -35,46 +36,19 @@
 #define SSD1306_HEIGHT          64
 #define SSD1306_PAGE            8
 
-#define SSD1306_BUFFER_SIZE     SSD1306_WIDTH * SSD1306_HEIGHT / 8
+#define SSD1306_BUFFER_SIZE     1024
 
-
-/* SSD1306 Enumeration */
-
-typedef enum
-{
-    BLACK = 0x00,
-    WHITE = 0x01
-
-} SSD1306_COLOR;
-
-typedef enum
-{
-    SSD1306_OK = 0x00,
-    SSD1306_ERR = 0x01,
-
-} SSD1306_STATE;
-
+#define SSD1306_BLACK           0
+#define SSD1306_WHITE           1
 
 
 /* SSD1306 Struct */
 typedef struct
 {
-    uint16_t current_x;
-    uint16_t current_y;
-
-    uint8_t inverted;
-    
-    uint8_t initialized;
-    uint8_t display_on;
-
-} SSD1306;
-
-typedef struct
-{
     uint8_t x;
     uint8_t y;
 
-} SSD1306_VERTEX;
+} SSD1306_CURSOR;
 
 
 /* Charge Bump Setting Command */
@@ -130,11 +104,12 @@ void ssd1306_write_data(uint8_t* buffer, uint16_t size);
 
 /* Charge Bump Setting Function */
 
-// @param : 0x10(disable, reset), 0x14(enable)
+
 // Note. if enable charge pump
 // 0x8D : Charge Pump Setting
 // 0x14 : Enable Charge Pump
 // 0xAF : Display ON
+// @param : 0x10(disable, reset), 0x14(enable)
 void charge_bump_setting(uint8_t charge_bump); 
 
 
@@ -204,8 +179,8 @@ void set_com_output_scan_direction(uint8_t mode);
 // @param : 0(reset) - 63
 void set_display_offset(uint8_t vertical_shift);     
 
-// @param : 0x00(sequential), 0x10(alternative, reset)
-// @param : 0x00(disable, reset), 0x20(enable)
+// @param : 0(sequential), 1(alternative, reset)
+// @param : 0(disable, reset), 1(enable)
 void set_com_pins_hardware_config(uint8_t com_pin_config, uint8_t com_left_right_remap);
 
 
@@ -231,6 +206,22 @@ void ssd1306_update_screen();
 void ssd1306_black_screen();
 void ssd1306_white_screen();
 
+// Draw one black pixel
+// @param : 0 - 128
+// @param : 0 - 64
+void ssd1306_black_pixel(uint8_t x, uint8_t y);
 
+// Draw one white pixel
+// @param : 0 - 128
+// @param : 0 - 64
+void ssd1306_white_pixel(uint8_t x, uint8_t y);
+
+char ssd1306_write_char(SSD1306_FONT font, char ch);
+char ssd1306_write_string(SSD1306_FONT font, char *str);
+
+// Set current cursor
+// @param : 0 - 128
+// @param : 0 - 64 
+void ssd1306_set_cursor(uint8_t x, uint8_t y);
 
 #endif /* __SSD1306_H__ */
