@@ -11,8 +11,9 @@
 #include <string.h> // memcpy
 
 /* SSD1306 Variable */
-uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
-SSD1306_CURSOR cursor;
+static uint8_t ssd1306_buffer[SSD1306_BUFFER_SIZE];
+static SSD1306_CURSOR cursor;
+SSD1306_FONT current_font;
 
 
 /* I2C Write Function */
@@ -204,6 +205,9 @@ void ssd1306_init()
 
     // Clear Ram Data
     ssd1306_black_screen();
+
+    // Set cursor 0, 0
+    ssd1306_set_cursor(0, 0);
 }
 
 void ssd1306_update_screen()
@@ -296,6 +300,8 @@ char ssd1306_write_char(SSD1306_FONT font, char ch)
 // Write full string to screen buffer
 char ssd1306_write_string(SSD1306_FONT font, char *str)
 {
+    current_font = font;
+
     // Write until null-byte
     while(*str)
     {
@@ -317,4 +323,15 @@ void ssd1306_set_cursor(uint8_t x, uint8_t y)
 {
     cursor.x = x;
     cursor.y = y;
+}
+
+void ssd1306_enter()
+{
+    cursor.x = 0;
+    cursor.y += current_font.height;
+}
+
+void ssd1306_space()
+{
+    cursor.x += current_font.width;
 }

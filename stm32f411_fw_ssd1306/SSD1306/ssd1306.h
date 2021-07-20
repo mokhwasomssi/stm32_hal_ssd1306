@@ -224,4 +224,7 @@ char ssd1306_write_string(SSD1306_FONT font, char *str);
 // @param : 0 - 64 
 void ssd1306_set_cursor(uint8_t x, uint8_t y);
 
+void ssd1306_enter();
+void ssd1306_space();
+
 #endif /* __SSD1306_H__ */

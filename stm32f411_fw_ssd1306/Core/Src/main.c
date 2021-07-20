@@ -94,17 +94,17 @@ int main(void)
 
   ssd1306_init();
 
-  ssd1306_set_cursor(0, 0);
   ssd1306_write_string(font6x8, "ABC");
+  ssd1306_enter();
 
-  ssd1306_set_cursor(0, 8);
   ssd1306_write_string(font7x10, "ABC");
+  ssd1306_enter();
 
-  ssd1306_set_cursor(0, 18);
   ssd1306_write_string(font11x18, "ABC");
+  ssd1306_enter();
 
-  ssd1306_set_cursor(0, 36);
   ssd1306_write_string(font16x26, "ABC");
+  ssd1306_enter();
 
   ssd1306_update_screen();
 
